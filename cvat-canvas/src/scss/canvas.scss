@@ -483,3 +483,66 @@ g.cvat_canvas_shape_occluded {
 .cvat-canvas-notification-list-shortcuts {
     color: yellow;
 }
+
+.cvat-canvas-zoom-controls {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    z-index: 100;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 15%);
+}
+
+.cvat-canvas-zoom-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    background: white;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: #f5f5f5;
+        border-color: #999;
+    }
+
+    &:active {
+        background: #e0e0e0;
+    }
+}
+
+.cvat-canvas-zoom-level {
+    min-width: 45px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    user-select: none;
+}
+
+/* hide the controls on desktop devices with a mouse (a scroll wheel is available there) */
+@media (width >= 1024px) and (hover: hover) and (pointer: fine) {
+    .cvat-canvas-zoom-controls {
+        display: none;
+    }
+}
+
+/* show the controls on tablets and mobile devices regardless of their resolution */
+@media (width <= 1023px), (hover: none), (pointer: coarse) {
+    .cvat-canvas-zoom-controls {
+        display: flex;
+    }
+}

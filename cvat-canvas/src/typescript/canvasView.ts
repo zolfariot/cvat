@@ -62,6 +62,7 @@ export class CanvasViewImpl implements CanvasView, Listener {
     private attachmentBoard: HTMLDivElement;
     private adoptedContent: SVG.Container;
     private canvas: HTMLDivElement;
+    private zoomLevelDisplay: HTMLSpanElement | null;
     private gridPath: SVGPathElement;
     private gridPattern: SVGPatternElement;
     private controller: CanvasController;
@@ -797,6 +798,81 @@ export class CanvasViewImpl implements CanvasView, Listener {
         this.sliceHandler.transform(this.geometry);
     }
 
+    private updateZoomLevelDisplay(): void {
+        if (this.zoomLevelDisplay) {
+            this.zoomLevelDisplay.textContent = `${Math.round(this.geometry.scale * 100)}%`;
+        }
+    }
+
+    private zoomFromCanvasCenter(deltaY: number): void {
+        const canvasOffset = this.canvas.getBoundingClientRect();
+        const clientX = canvasOffset.left + this.canvas.clientWidth / 2;
+        const clientY = canvasOffset.top + this.canvas.clientHeight / 2;
+
+        const { offset } = this.controller.geometry;
+        const point = translateToSVG(this.content, [clientX, clientY]);
+        this.controller.zoom(point[0] - offset, point[1] - offset, deltaY);
+        this.canvas.dispatchEvent(
+            new CustomEvent('canvas.zoom', {
+                bubbles: false,
+                cancelable: true,
+            }),
+        );
+    }
+
+    private setupZoomControls(): void {
+        // On-screen zoom controls, primarily for touch devices where
+        // a scroll wheel is not available (visibility is managed with CSS media queries)
+        const container = window.document.createElement('div');
+        container.id = 'cvat_canvas_zoom_controls';
+        container.classList.add('cvat-canvas-zoom-controls');
+
+        const createButton = (className: string, text: string, title: string): HTMLButtonElement => {
+            const button = window.document.createElement('button');
+            button.type = 'button';
+            button.classList.add('cvat-canvas-zoom-btn', className);
+            button.textContent = text;
+            button.title = title;
+            return button;
+        };
+
+        // ZOOM_STEP_DELTA_Y corresponds to a 20% zoom step, see CanvasModel.zoom implementation
+        const ZOOM_STEP_DELTA_Y = 10;
+
+        const zoomOutButton = createButton('cvat-canvas-zoom-out', '−', 'Zoom out (20%)');
+        zoomOutButton.addEventListener('click', (): void => {
+            this.zoomFromCanvasCenter(ZOOM_STEP_DELTA_Y);
+        });
+
+        const zoomInButton = createButton('cvat-canvas-zoom-in', '+', 'Zoom in (20%)');
+        zoomInButton.addEventListener('click', (): void => {
+            this.zoomFromCanvasCenter(-ZOOM_STEP_DELTA_Y);
+        });
+
+        const zoomResetButton = createButton('cvat-canvas-zoom-reset', '⟲', 'Fit to canvas');
+        zoomResetButton.addEventListener('click', (): void => {
+            this.controller.fit();
+        });
+
+        this.zoomLevelDisplay = window.document.createElement('span');
+        this.zoomLevelDisplay.classList.add('cvat-canvas-zoom-level');
+        this.zoomLevelDisplay.textContent = `${Math.round(this.geometry.scale * 100)}%`;
+
+        container.appendChild(zoomOutButton);
+        container.appendChild(this.zoomLevelDisplay);
+        container.appendChild(zoomInButton);
+        container.appendChild(zoomResetButton);
+
+        // do not let canvas handlers (zoom, drag, context menu, etc) process events on the controls
+        for (const eventName of ['wheel', 'mousedown', 'pointerdown', 'dblclick', 'contextmenu']) {
+            container.addEventListener(eventName, (event: Event): void => {
+                event.stopPropagation();
+            });
+        }
+
+        this.canvas.appendChild(container);
+    }
+
     private transformCanvas(): void {
         // Transform canvas
         for (const obj of [
@@ -884,6 +960,9 @@ export class CanvasViewImpl implements CanvasView, Listener {
         this.autoborderHandler.transform(this.geometry);
         this.interactionHandler.transform(this.geometry);
         this.regionSelector.transform(this.geometry);
+        this.refreshRotationPointView();
+        this.refreshSkeletonResizer();
+        this.updateZoomLevelDisplay();
     }
 
     private resizeCanvas(): void {
@@ -1737,6 +1816,7 @@ export class CanvasViewImpl implements CanvasView, Listener {
         this.attachmentBoard = window.document.createElement('div');
 
         this.canvas = window.document.createElement('div');
+        this.zoomLevelDisplay = null;
 
         const gridDefs: SVGDefsElement = window.document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         const gridRect: SVGRectElement = window.document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -1954,6 +2034,7 @@ export class CanvasViewImpl implements CanvasView, Listener {
         });
 
         this.content.oncontextmenu = (): boolean => false;
+        this.setupZoomControls();
         model.subscribe(this);
     }
 
