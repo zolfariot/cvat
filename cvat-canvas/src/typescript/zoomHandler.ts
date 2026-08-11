@@ -18,9 +18,9 @@ export interface ZoomHandler {
 
 export class ZoomHandlerImpl implements ZoomHandler {
     private onZoomRegion: (x: number, y: number, width: number, height: number) => void;
-    private bindedOnSelectStart: (event: MouseEvent) => void;
-    private bindedOnSelectUpdate: (event: MouseEvent) => void;
-    private bindedOnSelectStop: (event: MouseEvent) => void;
+    private bindedOnSelectStart: (event: PointerEvent) => void;
+    private bindedOnSelectUpdate: (event: PointerEvent) => void;
+    private bindedOnSelectStop: (event: PointerEvent) => void;
     private geometry: Geometry;
     private canvas: SVG.Container;
     private selectionRect: SVG.Rect | null;
@@ -29,7 +29,7 @@ export class ZoomHandlerImpl implements ZoomHandler {
         y: number;
     };
 
-    private onSelectStart(event: MouseEvent): void {
+    private onSelectStart(event: PointerEvent): void {
         if (!this.selectionRect && event.which === 1) {
             const point = translateToSVG((this.canvas.node as any) as SVGSVGElement, [event.clientX, event.clientY]);
             this.startSelectionPoint = {
@@ -46,7 +46,7 @@ export class ZoomHandlerImpl implements ZoomHandler {
     }
 
     private getSelectionBox(
-        event: MouseEvent,
+        event: PointerEvent,
     ): {
         x: number;
         y: number;
@@ -72,7 +72,7 @@ export class ZoomHandlerImpl implements ZoomHandler {
         };
     }
 
-    private onSelectUpdate(event: MouseEvent): void {
+    private onSelectUpdate(event: PointerEvent): void {
         if (this.selectionRect) {
             this.selectionRect.attr({
                 ...this.getSelectionBox(event),
@@ -80,7 +80,7 @@ export class ZoomHandlerImpl implements ZoomHandler {
         }
     }
 
-    private onSelectStop(event: MouseEvent): void {
+    private onSelectStop(event: PointerEvent): void {
         if (this.selectionRect) {
             const box = this.getSelectionBox(event);
             this.selectionRect.remove();
@@ -115,15 +115,15 @@ export class ZoomHandlerImpl implements ZoomHandler {
     }
 
     public zoom(): void {
-        this.canvas.node.addEventListener('mousedown', this.bindedOnSelectStart);
-        this.canvas.node.addEventListener('mousemove', this.bindedOnSelectUpdate);
-        this.canvas.node.addEventListener('mouseup', this.bindedOnSelectStop);
+        this.canvas.node.addEventListener('pointerdown', this.bindedOnSelectStart);
+        this.canvas.node.addEventListener('pointermove', this.bindedOnSelectUpdate);
+        this.canvas.node.addEventListener('pointerup', this.bindedOnSelectStop);
     }
 
     public cancel(): void {
-        this.canvas.node.removeEventListener('mousedown', this.bindedOnSelectStart);
-        this.canvas.node.removeEventListener('mousemove', this.bindedOnSelectUpdate);
-        this.canvas.node.removeEventListener('mouseup ', this.bindedOnSelectStop);
+        this.canvas.node.removeEventListener('pointerdown', this.bindedOnSelectStart);
+        this.canvas.node.removeEventListener('pointermove', this.bindedOnSelectUpdate);
+        this.canvas.node.removeEventListener('pointerup', this.bindedOnSelectStop);
     }
 
     public transform(geometry: Geometry): void {

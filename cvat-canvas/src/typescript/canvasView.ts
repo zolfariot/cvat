@@ -1926,7 +1926,7 @@ export class CanvasViewImpl implements CanvasView, Listener {
         }
     };
 
-    private onMouseUp = (event: MouseEvent): void => {
+    private onPointerUp = (event: PointerEvent): void => {
         if (event.button === 0 || event.button === 1) {
             this.controller.disableDrag();
         }
@@ -2128,7 +2128,7 @@ export class CanvasViewImpl implements CanvasView, Listener {
             e.preventDefault();
         });
 
-        this.canvas.addEventListener('mousedown', (event): void => {
+        this.canvas.addEventListener('pointerdown', (event): void => {
             if ([0, 1].includes(event.button)) {
                 if (
                     [Mode.IDLE, Mode.DRAG_CANVAS, Mode.MERGE, Mode.SPLIT]
@@ -2139,11 +2139,11 @@ export class CanvasViewImpl implements CanvasView, Listener {
             }
         });
 
-        window.document.addEventListener('mouseup', this.onMouseUp);
+        window.document.addEventListener('pointerup', this.onPointerUp);
         window.document.addEventListener('keydown', this.onKeyDown);
         window.document.addEventListener('keyup', this.onKeyUp);
 
-        for (const eventName of ['wheel', 'mousedown', 'dblclick', 'contextmenu']) {
+        for (const eventName of ['wheel', 'mousedown', 'pointerdown', 'dblclick', 'contextmenu']) {
             this.attachmentBoard.addEventListener(eventName, (event) => {
                 event.stopPropagation();
             });
@@ -2176,7 +2176,7 @@ export class CanvasViewImpl implements CanvasView, Listener {
             event.preventDefault();
         });
 
-        this.canvas.addEventListener('mousemove', (e): void => {
+        this.canvas.addEventListener('pointermove', (e): void => {
             this.controller.drag(e.clientX, e.clientY);
 
             if (this.mode !== Mode.IDLE) return;
@@ -2639,7 +2639,7 @@ export class CanvasViewImpl implements CanvasView, Listener {
 
             window.document.removeEventListener('keydown', this.onKeyDown);
             window.document.removeEventListener('keyup', this.onKeyUp);
-            window.document.removeEventListener('mouseup', this.onMouseUp);
+            window.document.removeEventListener('pointerup', this.onPointerUp);
             this.interactionHandler.destroy();
         }
 
