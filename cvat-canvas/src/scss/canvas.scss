@@ -350,6 +350,7 @@ g.cvat_canvas_shape_occluded {
 }
 
 #cvat_canvas_wrapper {
+    touch-action: none;
     width: calc(100% - 10px);
     height: calc(100% - 10px);
     margin: 5px;
